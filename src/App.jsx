@@ -4,6 +4,87 @@ import { getImportedCategories } from './api/importedCategories'
 import { getImportedQuestions, importQuestions } from './api/importedQuestions'
 import './App.css'
 
+function QuizQuestions({ questions }) {
+  const [selected, setSelected] = useState({})
+  const [submitted, setSubmitted] = useState(false)
+
+  useEffect(() => {
+    setSelected({})
+    setSubmitted(false)
+  }, [questions])
+
+  const handleSelect = (questionId, answerId) => {
+    if (submitted) return
+    setSelected((s) => ({ ...s, [questionId]: answerId }))
+  }
+
+  const handleSubmit = (event) => {
+    event.preventDefault()
+    setSubmitted(true)
+  }
+
+  const score = questions.reduce((total, question) => {
+    const correctAnswer = question.answers.find((answer) => answer.is_correct)
+    return total + (selected[question.id] === correctAnswer?.id ? 1 : 0)
+  }, 0)
+
+  const allAnswered = questions.every((question) => selected[question.id])
+
+  return (
+    <form className="quiz-form" onSubmit={handleSubmit}>
+      <ul className="question-list">
+        {questions.map((question) => (
+          <li key={question.id} className="question-card">
+            <div className="question-meta">
+              {question.category && <span className="question-tag">{question.category.name}</span>}
+              {question.difficulty && <span className="question-tag">{question.difficulty}</span>}
+            </div>
+            <p className="question-text">{question.text}</p>
+            <ul className="answer-list">
+              {question.answers.map((answer) => {
+                const isSelected = selected[question.id] === answer.id
+                let className = ''
+                if (submitted) {
+                  if (answer.is_correct) className = 'correct'
+                  else if (isSelected) className = 'incorrect'
+                } else if (isSelected) {
+                  className = 'selected'
+                }
+
+                return (
+                  <li key={answer.id} className={className}>
+                    <label>
+                      <input
+                        type="radio"
+                        name={`question-${question.id}`}
+                        checked={isSelected}
+                        onChange={() => handleSelect(question.id, answer.id)}
+                        disabled={submitted}
+                      />
+                      {answer.text}
+                    </label>
+                  </li>
+                )
+              })}
+            </ul>
+          </li>
+        ))}
+      </ul>
+
+      {!submitted && (
+        <button type="submit" disabled={!allAnswered}>
+          Valider mes réponses
+        </button>
+      )}
+      {submitted && (
+        <p className="quiz-score">
+          Score : {score} / {questions.length}
+        </p>
+      )}
+    </form>
+  )
+}
+
 function ImportedQuestionsSection() {
   const [importState, setImportState] = useState({ status: 'idle' })
   const [categoriesState, setCategoriesState] = useState({ status: 'loading', categories: [] })
@@ -85,24 +166,7 @@ function ImportedQuestionsSection() {
         <p className="categories-status">Aucune question importée pour l'instant.</p>
       )}
       {questionsState.status === 'ok' && questionsState.questions.length > 0 && (
-        <ul className="question-list">
-          {questionsState.questions.map((question) => (
-            <li key={question.id} className="question-card">
-              <div className="question-meta">
-                {question.category && <span className="question-tag">{question.category.name}</span>}
-                {question.difficulty && <span className="question-tag">{question.difficulty}</span>}
-              </div>
-              <p className="question-text">{question.text}</p>
-              <ul className="answer-list">
-                {question.answers.map((answer) => (
-                  <li key={answer.id} className={answer.is_correct ? 'correct' : ''}>
-                    {answer.text}
-                  </li>
-                ))}
-              </ul>
-            </li>
-          ))}
-        </ul>
+        <QuizQuestions questions={questionsState.questions} />
       )}
     </>
   )

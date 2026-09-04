@@ -154,17 +154,60 @@
   gap: 6px;
 
   li {
-    padding: 8px 12px;
     border-radius: 6px;
     background: var(--code-bg);
     color: var(--text);
     font-size: 15px;
   }
 
-  li.correct {
+  li.selected {
     background: var(--accent-bg);
+  }
+
+  li.correct {
+    background: rgba(48, 164, 108, 0.15);
     color: var(--text-h);
   }
+
+  li.incorrect {
+    background: rgba(229, 72, 77, 0.15);
+    color: var(--text-h);
+  }
+
+  label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    cursor: pointer;
+  }
+}
+
+.quiz-form button {
+  margin-top: 24px;
+  padding: 10px 16px;
+  border-radius: 6px;
+  border: 2px solid transparent;
+  color: var(--accent);
+  background: var(--accent-bg);
+  font-size: 16px;
+  cursor: pointer;
+  transition: border-color 0.3s;
+
+  &:hover:not(:disabled) {
+    border-color: var(--accent-border);
+  }
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+}
+
+.quiz-score {
+  margin-top: 24px;
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--text-h);
 }
 
 .footer {
