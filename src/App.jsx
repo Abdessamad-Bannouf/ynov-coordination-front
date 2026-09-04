@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react'
 import { createCategory, getCategories } from './api/categories'
 import { getImportedCategories } from './api/importedCategories'
-import { importQuestions } from './api/importedQuestions'
+import { getImportedQuestions, importQuestions } from './api/importedQuestions'
 import './App.css'
 
 function ImportedQuestionsSection() {
   const [importState, setImportState] = useState({ status: 'idle' })
   const [categoriesState, setCategoriesState] = useState({ status: 'loading', categories: [] })
+  const [questionsState, setQuestionsState] = useState({ status: 'loading', questions: [] })
 
   const refreshCategories = () => {
     setCategoriesState((s) => ({ ...s, status: 'loading' }))
@@ -15,7 +16,15 @@ function ImportedQuestionsSection() {
       .catch((error) => setCategoriesState({ status: 'error', error: error.message }))
   }
 
+  const refreshQuestions = () => {
+    setQuestionsState((s) => ({ ...s, status: 'loading' }))
+    getImportedQuestions()
+      .then((questions) => setQuestionsState({ status: 'ok', questions }))
+      .catch((error) => setQuestionsState({ status: 'error', error: error.message }))
+  }
+
   useEffect(refreshCategories, [])
+  useEffect(refreshQuestions, [])
 
   const handleImport = async () => {
     setImportState({ status: 'loading' })
@@ -23,6 +32,7 @@ function ImportedQuestionsSection() {
       const result = await importQuestions()
       setImportState({ status: 'ok', imported: result.imported })
       refreshCategories()
+      refreshQuestions()
     } catch (error) {
       setImportState({ status: 'error', error: error.message })
     }
@@ -58,6 +68,38 @@ function ImportedQuestionsSection() {
           {categoriesState.categories.map((category) => (
             <li key={category.id} className="category-card">
               {category.name} ({category.questions_count})
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {questionsState.status === 'loading' && (
+        <p className="categories-status">Chargement des questions importées...</p>
+      )}
+      {questionsState.status === 'error' && (
+        <p className="categories-status error">
+          Impossible de charger les questions importées : {questionsState.error}
+        </p>
+      )}
+      {questionsState.status === 'ok' && questionsState.questions.length === 0 && (
+        <p className="categories-status">Aucune question importée pour l'instant.</p>
+      )}
+      {questionsState.status === 'ok' && questionsState.questions.length > 0 && (
+        <ul className="question-list">
+          {questionsState.questions.map((question) => (
+            <li key={question.id} className="question-card">
+              <div className="question-meta">
+                {question.category && <span className="question-tag">{question.category.name}</span>}
+                {question.difficulty && <span className="question-tag">{question.difficulty}</span>}
+              </div>
+              <p className="question-text">{question.text}</p>
+              <ul className="answer-list">
+                {question.answers.map((answer) => (
+                  <li key={answer.id} className={answer.is_correct ? 'correct' : ''}>
+                    {answer.text}
+                  </li>
+                ))}
+              </ul>
             </li>
           ))}
         </ul>
