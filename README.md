@@ -1,16 +1,47 @@
-# React + Vite
+# Quizify — Front
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+Frontend React (Vite) de Quizify, une application de quiz par catégories. Consomme l'API du backend Laravel : [ynov-coordination-back](https://github.com/Abdessamad-Bannouf/ynov-coordination-back).
 
-Currently, two official plugins are available:
+## Stack
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- [React 19](https://react.dev/) + [Vite 6](https://vite.dev/)
+- [oxlint](https://oxc.rs/) pour le lint
 
-## React Compiler
+## Prérequis
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- Node.js ≥ 20.18
+- Le backend qui tourne (voir [ynov-coordination-back](https://github.com/Abdessamad-Bannouf/ynov-coordination-back)), par défaut sur `http://localhost:8000` via Docker
 
-## Expanding the Oxlint configuration
+## Installation
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+```bash
+npm install
+npm run dev
+```
+
+L'app est servie sur `http://localhost:5173`.
+
+## Connexion à l'API
+
+En dev, Vite proxifie automatiquement les requêtes `/api/*` vers `http://localhost:8000` (voir `vite.config.js`) — pas de configuration CORS à gérer en local.
+
+Pour pointer vers une autre URL d'API (hors proxy, ex. en production), définir `VITE_API_URL` dans un fichier `.env.local` :
+
+```
+VITE_API_URL=https://api.quizify.example.com
+```
+
+Le code d'accès à l'API se trouve dans `src/api/` :
+
+- `client.js` — wrapper `fetch` générique (cookies de session inclus, JSON in/out)
+- `categories.js`, `quizzes.js` — appels CRUD sur les endpoints correspondants
+- `auth.js` — login via un ID token Firebase (`Authorization: Bearer <token>`)
+
+## Scripts
+
+| Commande          | Description                          |
+| ------------------ | ------------------------------------ |
+| `npm run dev`       | Serveur de dev avec HMR              |
+| `npm run build`     | Build de production dans `dist/`     |
+| `npm run preview`   | Sert le build de production en local |
+| `npm run lint`      | Lint avec oxlint                     |
