@@ -1,8 +1,29 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import heroImg from './assets/hero.png'
 import reactLogo from './assets/react.svg'
 import viteLogo from './assets/vite.svg'
+import { getCategories } from './api/categories'
 import './App.css'
+
+function ApiStatus() {
+  const [state, setState] = useState({ status: 'loading', categories: [] })
+
+  useEffect(() => {
+    getCategories()
+      .then((categories) => setState({ status: 'ok', categories }))
+      .catch((error) => setState({ status: 'error', error: error.message }))
+  }, [])
+
+  if (state.status === 'loading') return <p>Connexion à l'API...</p>
+  if (state.status === 'error') return <p>Erreur API : {state.error}</p>
+
+  return (
+    <p>
+      API connectée ✓ ({state.categories.length} catégorie
+      {state.categories.length > 1 ? 's' : ''})
+    </p>
+  )
+}
 
 function App() {
   const [count, setCount] = useState(0)
@@ -28,6 +49,7 @@ function App() {
         >
           Count is {count}
         </button>
+        <ApiStatus />
       </section>
 
       <div className="ticks"></div>
