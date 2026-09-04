@@ -1,33 +1,68 @@
 import { useEffect, useState } from 'react'
 import { createCategory, getCategories } from './api/categories'
+import { getImportedCategories } from './api/importedCategories'
 import { importQuestions } from './api/importedQuestions'
 import './App.css'
 
-function ImportQuestionsButton() {
-  const [state, setState] = useState({ status: 'idle' })
+function ImportedQuestionsSection() {
+  const [importState, setImportState] = useState({ status: 'idle' })
+  const [categoriesState, setCategoriesState] = useState({ status: 'loading', categories: [] })
+
+  const refreshCategories = () => {
+    setCategoriesState((s) => ({ ...s, status: 'loading' }))
+    getImportedCategories()
+      .then((categories) => setCategoriesState({ status: 'ok', categories }))
+      .catch((error) => setCategoriesState({ status: 'error', error: error.message }))
+  }
+
+  useEffect(refreshCategories, [])
 
   const handleImport = async () => {
-    setState({ status: 'loading' })
+    setImportState({ status: 'loading' })
     try {
       const result = await importQuestions()
-      setState({ status: 'ok', imported: result.imported })
+      setImportState({ status: 'ok', imported: result.imported })
+      refreshCategories()
     } catch (error) {
-      setState({ status: 'error', error: error.message })
+      setImportState({ status: 'error', error: error.message })
     }
   }
 
   return (
-    <div className="import-questions">
-      <button type="button" onClick={handleImport} disabled={state.status === 'loading'}>
-        {state.status === 'loading' ? 'Import en cours...' : 'Importer les questions'}
-      </button>
-      {state.status === 'ok' && (
-        <p className="categories-status">{state.imported} question(s) importée(s).</p>
+    <>
+      <div className="import-questions">
+        <button type="button" onClick={handleImport} disabled={importState.status === 'loading'}>
+          {importState.status === 'loading' ? 'Import en cours...' : 'Importer les questions'}
+        </button>
+        {importState.status === 'ok' && (
+          <p className="categories-status">{importState.imported} question(s) importée(s).</p>
+        )}
+        {importState.status === 'error' && (
+          <p className="categories-status error">Échec de l'import : {importState.error}</p>
+        )}
+      </div>
+
+      {categoriesState.status === 'loading' && (
+        <p className="categories-status">Chargement des catégories importées...</p>
       )}
-      {state.status === 'error' && (
-        <p className="categories-status error">Échec de l'import : {state.error}</p>
+      {categoriesState.status === 'error' && (
+        <p className="categories-status error">
+          Impossible de charger les catégories importées : {categoriesState.error}
+        </p>
       )}
-    </div>
+      {categoriesState.status === 'ok' && categoriesState.categories.length === 0 && (
+        <p className="categories-status">Aucune catégorie importée pour l'instant.</p>
+      )}
+      {categoriesState.status === 'ok' && categoriesState.categories.length > 0 && (
+        <ul className="category-grid">
+          {categoriesState.categories.map((category) => (
+            <li key={category.id} className="category-card">
+              {category.name} ({category.questions_count})
+            </li>
+          ))}
+        </ul>
+      )}
+    </>
   )
 }
 
@@ -125,7 +160,7 @@ function App() {
 
       <section className="categories">
         <h2>Questions</h2>
-        <ImportQuestionsButton />
+        <ImportedQuestionsSection />
       </section>
 
       <footer className="footer">
