@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { createCategory, getCategories } from './api/categories'
 import { getImportedCategories } from './api/importedCategories'
 import { getImportedQuestions, importQuestions } from './api/importedQuestions'
+import { getQuizapiCategories } from './api/quizapiCategories'
 import './App.css'
 
 function QuizQuestions({ questions }) {
@@ -89,6 +90,14 @@ function ImportedQuestionsSection() {
   const [importState, setImportState] = useState({ status: 'idle' })
   const [categoriesState, setCategoriesState] = useState({ status: 'loading', categories: [] })
   const [questionsState, setQuestionsState] = useState({ status: 'loading', questions: [] })
+  const [availableCategories, setAvailableCategories] = useState([])
+  const [selectedCategory, setSelectedCategory] = useState('')
+
+  useEffect(() => {
+    getQuizapiCategories()
+      .then(setAvailableCategories)
+      .catch(() => setAvailableCategories([]))
+  }, [])
 
   const refreshCategories = () => {
     setCategoriesState((s) => ({ ...s, status: 'loading' }))
@@ -110,7 +119,7 @@ function ImportedQuestionsSection() {
   const handleImport = async () => {
     setImportState({ status: 'loading' })
     try {
-      const result = await importQuestions()
+      const result = await importQuestions(selectedCategory || undefined)
       setImportState({ status: 'ok', imported: result.imported })
       refreshCategories()
       refreshQuestions()
@@ -122,6 +131,18 @@ function ImportedQuestionsSection() {
   return (
     <>
       <div className="import-questions">
+        <select
+          value={selectedCategory}
+          onChange={(event) => setSelectedCategory(event.target.value)}
+          aria-label="Catégorie à importer"
+        >
+          <option value="">Toutes les catégories</option>
+          {availableCategories.map((category) => (
+            <option key={category.name} value={category.name}>
+              {category.name} ({category.quizCount})
+            </option>
+          ))}
+        </select>
         <button type="button" onClick={handleImport} disabled={importState.status === 'loading'}>
           {importState.status === 'loading' ? 'Import en cours...' : 'Importer les questions'}
         </button>

@@ -78,8 +78,22 @@
 
 .import-questions {
   margin: 24px 0;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+
+  select {
+    padding: 10px 12px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--text-h);
+    font-size: 16px;
+  }
 
   .categories-status {
+    width: 100%;
     margin-top: 12px;
   }
 }
