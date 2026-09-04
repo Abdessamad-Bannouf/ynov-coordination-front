@@ -92,6 +92,7 @@ function ImportedQuestionsSection() {
   const [questionsState, setQuestionsState] = useState({ status: 'loading', questions: [] })
   const [availableCategories, setAvailableCategories] = useState([])
   const [selectedCategory, setSelectedCategory] = useState('')
+  const [activeCategoryId, setActiveCategoryId] = useState(null)
 
   useEffect(() => {
     getQuizapiCategories()
@@ -168,8 +169,16 @@ function ImportedQuestionsSection() {
       {categoriesState.status === 'ok' && categoriesState.categories.length > 0 && (
         <ul className="category-grid">
           {categoriesState.categories.map((category) => (
-            <li key={category.id} className="category-card">
-              {category.name} ({category.questions_count})
+            <li key={category.id}>
+              <button
+                type="button"
+                className={`category-card${activeCategoryId === category.id ? ' active' : ''}`}
+                onClick={() =>
+                  setActiveCategoryId((current) => (current === category.id ? null : category.id))
+                }
+              >
+                {category.name} ({category.questions_count})
+              </button>
             </li>
           ))}
         </ul>
@@ -186,8 +195,22 @@ function ImportedQuestionsSection() {
       {questionsState.status === 'ok' && questionsState.questions.length === 0 && (
         <p className="categories-status">Aucune question importée pour l'instant.</p>
       )}
+      {activeCategoryId && (
+        <p className="categories-status">
+          Filtré sur "{categoriesState.categories.find((c) => c.id === activeCategoryId)?.name}" —{' '}
+          <button type="button" className="link-button" onClick={() => setActiveCategoryId(null)}>
+            afficher toutes les questions
+          </button>
+        </p>
+      )}
       {questionsState.status === 'ok' && questionsState.questions.length > 0 && (
-        <QuizQuestions questions={questionsState.questions} />
+        <QuizQuestions
+          questions={
+            activeCategoryId
+              ? questionsState.questions.filter((q) => q.category?.id === activeCategoryId)
+              : questionsState.questions
+          }
+        />
       )}
     </>
   )
