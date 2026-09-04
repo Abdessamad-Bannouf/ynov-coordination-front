@@ -1,0 +1,19 @@
+services:
+  front:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: quizify_front
+    restart: unless-stopped
+    ports:
+      - "5173:5173"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    environment:
+      # The backend lives in a separate docker-compose project (ynov-coordination-back).
+      # host.docker.internal reaches the host machine, where the backend's nginx is
+      # exposed on port 8000 (whether it runs in Docker or natively).
+      VITE_PROXY_TARGET: http://host.docker.internal:8000
+    extra_hosts:
+      - "host.docker.internal:host-gateway" # no-op on Docker Desktop, needed on Linux
